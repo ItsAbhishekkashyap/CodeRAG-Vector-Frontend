@@ -56,18 +56,20 @@ export default function RepoGuardDashboard() {
     setError(null);
     setLoadingStage("Scanning codebase structure & indexing target files...");
 
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
     try {
       await new Promise((res) => setTimeout(res, 400));
       setLoadingStage("Executing Multi-Domain Static & Dynamic Security Audit...");
 
-      const response = await fetch("http://localhost:8000/api/scan-repo", {
+      const response = await fetch(`${baseUrl}/api/scan-repo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ repo_path: pathToScan })
       });
 
       if (!response.ok) {
-        const fallbackRes = await fetch("http://localhost:8000/api/scan", {
+        const fallbackRes = await fetch(`${baseUrl}/api/scan`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ repo_path: pathToScan })
