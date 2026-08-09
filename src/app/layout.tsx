@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RepoGuard AI - Enterprise Security & Health Dashboard",
+  title: "CodeRAG Vector - Enterprise Security & Health Dashboard",
   description: "Automated RAG-Powered Codebase Security & CS Auditor",
 };
 
