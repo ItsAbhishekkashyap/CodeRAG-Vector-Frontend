@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CodeRAG Vector - Frontend Architecture & System Documentation
 
-## Getting Started
+**CodeRAG Vector** is a high-performance, modular enterprise dashboard built with **Next.js 14**, **React 18**, and **Tailwind CSS**. It serves as the visual DevSecOps command center for the CodeRAG Vector audit engine, rendering real-time codebase health metrics, OWASP security vulnerabilities, Computer Science architecture findings, and refactored code output.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🎨 Design System & Palette Specifications
+
+The UI utilizes a modern **Midnight Aurora & Cosmic Obsidian** design system:
+- **Canvas Background**: Deep Void Sapphire (`#05070E`) with floating animated ambient mesh glow orbs.
+- **Surface Panels**: `aurora-glass` backdrop-blur-xl cards (`rgba(14, 19, 34, 0.75)`).
+- **Typography**: `Outfit` for bold headings, `Plus Jakarta Sans` for body text, and `JetBrains Mono` for code blocks.
+- **Brand Accents**: Gradient clips (`from-cyan-400 via-indigo-500 to-purple-500`) and Cyber Emerald (`#10B981`).
+
+---
+
+## 🧩 Component Architecture & Directory Structure
+
+The frontend is built on a **Modular Component Architecture** (8 decoupled reusable components located in `src/components/`):
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── globals.css          # Midnight Aurora theme, glassmorphism & keyframe animations
+│   │   ├── layout.tsx           # Root Next.js layout metadata & font configuration
+│   │   └── page.tsx             # Clean orchestrator component assembling all modular UI zones
+│   └── components/
+│       ├── Header.tsx           # Sticky top navigation bar with brand logo & setup drawer toggle
+│       ├── IntroBanner.tsx      # Interactive hero banner with animated glow orbs & feature tabs
+│       ├── LocalSetupModal.tsx  # Step-by-step local machine setup & execution procedure drawer
+│       ├── ExecutiveMetrics.tsx # 3 Metric cards (Quality Score Index, Audited Files, Flagged Violations)
+│       ├── CommandZone.tsx      # Target repository path input bar & GitHub URL scan CTA button
+│       ├── FilterBar.tsx        # Search bar and category filter tabs (All, Critical, OOPS, DBMS, Security)
+│       ├── AuditCard.tsx        # Expandable file breakdown card with split-pane findings & code diff block
+│       └── Footer.tsx           # Multi-column enterprise footer with system specs & compliance tags
+├── scripts/
+│   └── test_frontend.mjs        # Automated integration test runner (npm test)
+├── next.config.mjs              # Next.js 14 configuration settings
+└── package.json                 # Project dependencies & npm scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Modular Component Breakdown
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. `Header.tsx`
+- **Location**: `src/components/Header.tsx`
+- **Function**: Sticky top navigation bar featuring the glowing `CodeRAG Vector` logo badge, quick scroll navigation links, and the local machine setup modal trigger button.
 
-## Learn More
+### 2. `IntroBanner.tsx`
+- **Location**: `src/components/IntroBanner.tsx`
+- **Function**: Interactive introductory hero section with floating background glow orbs (`animate-mesh-1`, `animate-mesh-2`), action CTAs, and interactive tabbed feature cards previewing the 4 audit domains (**OOPS**, **DBMS**, **OS Concurrency**, **OWASP Security**).
 
-To learn more about Next.js, take a look at the following resources:
+### 3. `LocalSetupModal.tsx`
+- **Location**: `src/components/LocalSetupModal.tsx`
+- **Function**: Step-by-step interactive drawer giving first-time visitors exact terminal commands to launch both Backend (`python -m uvicorn main:app`) and Frontend (`npm run dev`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. `ExecutiveMetrics.tsx`
+- **Location**: `src/components/ExecutiveMetrics.tsx`
+- **Function**: Displays 3 high-impact summary cards:
+  - **Codebase Quality Index**: Overall score gauge.
+  - **Audited Source Files**: Number of scanned `.py, .js, .ts, .tsx, .sql` files.
+  - **Flagged Violations**: Counter highlighting critical risks in Terracotta/Rose badge.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 5. `CommandZone.tsx`
+- **Location**: `src/components/CommandZone.tsx`
+- **Function**: Input zone allowing users to scan local file paths (e.g. `./sample_project`) OR public GitHub repository URLs (e.g. `https://github.com/expressjs/express`) with a tactile **"RUN DEEP RAG AUDIT"** action button.
 
-## Deploy on Vercel
+### 6. `FilterBar.tsx`
+- **Location**: `src/components/FilterBar.tsx`
+- **Function**: Search input bar and category filter tabs for instant client-side filtering.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 7. `AuditCard.tsx`
+- **Location**: `src/components/AuditCard.tsx`
+- **Function**: Expandable accordion card featuring:
+  - **Left Pane**: OOPS Encapsulation & DBMS SQL findings.
+  - **Right Pane**: OS Concurrency Deadlock & OWASP Security findings.
+  - **Dark Code Block**: `bg-[#03050a]` refactored code output with one-click copy button feedback.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 8. `Footer.tsx`
+- **Location**: `src/components/Footer.tsx`
+- **Function**: Multi-column enterprise footer displaying system specs (FastAPI Core, ChromaDB Vector DB, Python 3.11), core audit capabilities, and OWASP Top 10 compliance tags.
+
+---
+
+## 🚀 How to Run & Deploy
+
+### **Local Development**
+```bash
+# Install dependencies
+npm install
+
+# Start Next.js dev server
+npm run dev
+```
+Open **`http://localhost:3000`** in your browser.
+
+### **Production Deployment (Vercel)**
+1. Push `frontend/` to GitHub.
+2. Import project into **[Vercel](https://vercel.com)**.
+3. Configure Environment Variable:
+   ```env
+   NEXT_PUBLIC_BACKEND_URL=https://coderag-vector-backend.onrender.com
+   ```
+4. Click **Deploy**.
