@@ -1,91 +1,86 @@
 "use client";
 
-import React from "react";
-import { Laptop, Server, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { lockScroll } from "@/lib/motion";
 
 interface LocalSetupModalProps {
   onClose: () => void;
+  open?: boolean;
 }
 
-export const LocalSetupModal: React.FC<LocalSetupModalProps> = ({ onClose }) => {
+const STEPS: { title: string; cmds: string[] }[] = [
+  {
+    title: "Start the audit engine",
+    cmds: ["cd CodeRAG-Vector\\backend", ".\\venv\\Scripts\\Activate", "python -m uvicorn main:app --reload --port 8000"],
+  },
+  {
+    title: "Start the dashboard in a second terminal",
+    cmds: ["cd CodeRAG-Vector\\frontend", "npm run dev"],
+  },
+  {
+    title: "Open the app",
+    cmds: ["http://localhost:3000"],
+  },
+];
+
+const Cmd: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
   return (
-    <div className="bg-[#131924] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between border-b border-[#1e2638] pb-3">
-        <div className="flex items-center gap-2.5 text-slate-50 font-bold text-base">
-          <Laptop className="w-5 h-5 text-emerald-400" />
-          <span>Local Machine Setup & Execution Procedure</span>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-lg text-slate-400 hover:text-white bg-[#1c2433] hover:bg-[#253044] transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+    <div className="cmd">
+      <code data-lenis-prevent>{text}</code>
+      <button
+        onClick={() => {
+          navigator.clipboard?.writeText(text).catch(() => {});
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+};
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        {/* Backend Setup */}
-        <div className="space-y-2.5 bg-[#0b0f17] p-4 rounded-xl border border-[#1e2638]">
-          <div className="font-bold text-emerald-400 flex items-center gap-2 text-xs">
-            <Server className="w-4 h-4" /> Step 1: Launch Backend (FastAPI Audit Engine)
-          </div>
-          <ol className="list-decimal list-inside space-y-2 text-slate-300 font-mono text-[11px] leading-relaxed">
-            <li>Open Terminal in project directory</li>
-            <li>
-              <code className="text-emerald-300 bg-[#131924] px-1.5 py-0.5 rounded border border-[#1e2638]">
-                cd RepoGuard-AI\backend
-              </code>
-            </li>
-            <li>
-              Activate Virtual Environment:
-              <br />
-              <code className="text-emerald-300 bg-[#131924] px-1.5 py-0.5 rounded border border-[#1e2638] mt-1 inline-block">
-                .\venv\Scripts\Activate
-              </code>
-            </li>
-            <li>
-              Start FastAPI Server:
-              <br />
-              <code className="text-emerald-300 bg-[#131924] px-1.5 py-0.5 rounded border border-[#1e2638] mt-1 inline-block">
-                python -m uvicorn main:app --reload --port 8000
-              </code>
-            </li>
-          </ol>
-        </div>
+/** Slide-in drawer with the local setup steps. Scrolls on its own; the page behind stays put. */
+export const LocalSetupModal: React.FC<LocalSetupModalProps> = ({ onClose, open = true }) => {
+  const closeBtn = useRef<HTMLButtonElement>(null);
 
-        {/* Frontend Setup */}
-        <div className="space-y-2.5 bg-[#0b0f17] p-4 rounded-xl border border-[#1e2638]">
-          <div className="font-bold text-emerald-400 flex items-center gap-2 text-xs">
-            <Laptop className="w-4 h-4" /> Step 2: Launch Frontend (Dashboard UI)
-          </div>
-          <ol className="list-decimal list-inside space-y-2 text-slate-300 font-mono text-[11px] leading-relaxed">
-            <li>Open a second Terminal window</li>
-            <li>
-              <code className="text-emerald-300 bg-[#131924] px-1.5 py-0.5 rounded border border-[#1e2638]">
-                cd RepoGuard-AI\frontend
-              </code>
-            </li>
-            <li>
-              Run Next.js Dev Server:
-              <br />
-              <code className="text-emerald-300 bg-[#131924] px-1.5 py-0.5 rounded border border-[#1e2638] mt-1 inline-block">
-                npm run dev
-              </code>
-            </li>
-            <li>
-              Open browser:
-              <br />
-              <code className="text-cyan-300 bg-[#131924] px-1.5 py-0.5 rounded border border-[#1e2638] mt-1 inline-block">
-                http://localhost:3000
-              </code>
-            </li>
-          </ol>
-        </div>
-      </div>
+  useEffect(() => {
+    lockScroll("setup", open);
+    if (!open) return;
+    const t = setTimeout(() => closeBtn.current?.focus(), 300);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
 
-      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300 flex items-center gap-2 font-medium">
-        <span>💡 To audit any local folder on your PC, paste its absolute folder path into the input box below and click &quot;Run Deep RAG Audit&quot;.</span>
-      </div>
+  useEffect(() => () => lockScroll("setup", false), []);
+
+  return (
+    <div className={`setup${open ? " open" : ""}`} aria-hidden={!open}>
+      <div className="setup__veil" onClick={onClose} />
+      <aside className="setup__panel" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+        <div className="setup__head">
+          <h2 id="setupTitle" className="setup__title">Run it locally</h2>
+          <button className="x" ref={closeBtn} onClick={onClose} aria-label="Close" tabIndex={open ? 0 : -1} />
+        </div>
+        <ol>
+          {STEPS.map((s) => (
+            <li key={s.title}>
+              <div>
+                <h3 className="setup__step">{s.title}</h3>
+                {s.cmds.map((c) => <Cmd key={c} text={c} />)}
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="tip">
+          To audit any folder on your PC, paste its absolute path into the audit field and press Run audit.
+        </p>
+      </aside>
     </div>
   );
 };
