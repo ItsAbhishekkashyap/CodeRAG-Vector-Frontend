@@ -1,0 +1,30 @@
+/** Single source of truth for SEO copy and URLs. Set NEXT_PUBLIC_SITE_URL in Vercel if the domain changes. */
+export const SITE = {
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://coderagvector.vercel.app").replace(/\/$/, ""),
+  name: "CodeRAG Vector",
+  title: "CodeRAG Vector — AI Code Review & Security Audit for GitHub Repos",
+  shortTitle: "AI Code Review & Security Audit",
+  description:
+    "Free RAG-powered code auditor. Scan a local folder or any public GitHub repo against 17 computer-science rules for OOP design, SQL safety, concurrency and OWASP security, then get scores, fixes and refactored code.",
+  keywords: [
+    "AI code review",
+    "code audit tool",
+    "static code analysis",
+    "GitHub repository scanner",
+    "code security audit",
+    "OWASP Top 10 checker",
+    "SQL injection detection",
+    "race condition detection",
+    "OOP SOLID code review",
+    "DBMS ACID best practices",
+    "RAG code analysis",
+    "ChromaDB vector search",
+    "Gemini code review",
+    "FastAPI code auditor",
+    "DevSecOps tool",
+  ],
+  author: "Abhishek Gond",
+  github: "https://github.com/ItsAbhishekkashyap/CodeRAG-Vector-Frontend",
+  locale: "en_US",
+  themeColor: "#E8E9E3",
+};

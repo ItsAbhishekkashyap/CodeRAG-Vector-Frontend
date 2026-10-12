@@ -9,7 +9,16 @@ import { CommandZone } from "@/components/CommandZone";
 import { FilterBar } from "@/components/FilterBar";
 import { AuditCard } from "@/components/AuditCard";
 import { Footer } from "@/components/Footer";
-import { FileCode, AlertTriangle, RefreshCw } from "lucide-react";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { Preloader } from "@/components/motion/Preloader";
+import { Cursor } from "@/components/motion/Cursor";
+import { Ambient } from "@/components/motion/Ambient";
+import { FloatingAudit } from "@/components/motion/FloatingAudit";
+import { Marquee } from "@/components/sections/Marquee";
+import { Specimen } from "@/components/sections/Specimen";
+import { Lenses } from "@/components/sections/Lenses";
+import { Pipeline } from "@/components/sections/Pipeline";
+import { smoothScrollTo } from "@/lib/motion";
 
 interface AuditResult {
   filename: string;
@@ -112,7 +121,7 @@ export default function RepoGuardDashboard() {
   const scrollToCommandZone = () => {
     const elem = document.getElementById("command-zone");
     if (elem) {
-      elem.scrollIntoView({ behavior: "smooth" });
+      smoothScrollTo(elem);
     }
   };
 
@@ -135,8 +144,12 @@ export default function RepoGuardDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-[#05070e] text-slate-100 antialiased flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
-      
+    <>
+      <SmoothScroll />
+      <Preloader />
+      <Ambient />
+      <Cursor />
+
       {/* Header */}
       <Header
         showSetupGuide={showSetupGuide}
@@ -144,26 +157,17 @@ export default function RepoGuardDashboard() {
         onScrollToAudit={scrollToCommandZone}
       />
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8 flex-1">
-        
-        {/* Local Setup Procedure Drawer */}
-        {showSetupGuide && (
-          <LocalSetupModal onClose={() => setShowSetupGuide(false)} />
-        )}
-
-        {/* Eye-Catching Landing Intro Hero Section */}
+      <main id="top">
+        {/* Landing hero */}
         <IntroBanner
           onStartScan={scrollToCommandZone}
           onToggleSetup={() => setShowSetupGuide(true)}
         />
 
-        {/* Executive Metrics Summary */}
-        <ExecutiveMetrics
-          overallScore={overallScore}
-          totalFiles={totalFiles}
-          totalViolations={totalViolations}
-        />
+        <Marquee />
+        <Specimen />
+        <Lenses />
+        <Pipeline />
 
         {/* Command Zone Input Bar */}
         <CommandZone
@@ -171,10 +175,18 @@ export default function RepoGuardDashboard() {
           setRepoPath={setRepoPath}
           loading={loading}
           onRunAudit={handleRunAudit}
+          loadingStage={loadingStage}
         />
 
-        {/* Audit Results Breakdown */}
-        <section className="space-y-5">
+        {/* Audit Report */}
+        <section className="report wrap" id="report" aria-labelledby="report-title">
+          <ExecutiveMetrics
+            overallScore={overallScore}
+            totalFiles={totalFiles}
+            totalViolations={totalViolations}
+            repoPath={report?.summary?.repo_path}
+          />
+
           <FilterBar
             totalFiles={filteredResults.length}
             searchQuery={searchQuery}
@@ -183,58 +195,73 @@ export default function RepoGuardDashboard() {
             setDomainFilter={setDomainFilter}
           />
 
-          {/* Error Banner */}
-          {error && (
-            <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 flex items-start gap-3 text-xs sm:text-sm shadow-xl">
-              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-extrabold block text-sm">Execution Exception</span>
-                <span className="font-mono opacity-90">{error}</span>
-              </div>
-            </div>
-          )}
+          <ul className={`files${loading ? "" : " in"}`}>
+            {/* Error Banner */}
+            {error && (
+              <li className="state state--err" role="alert">
+                <div>
+                  <h3 className="state__h">The audit couldn&rsquo;t run</h3>
+                  <p><code>{error}</code></p>
+                </div>
+                <button className="pill" onClick={scrollToCommandZone}>Edit the path</button>
+              </li>
+            )}
 
-          {/* Loading Indicator */}
-          {loading && (
-            <div className="aurora-glass rounded-3xl p-12 text-center space-y-4 shadow-2xl">
-              <RefreshCw className="w-9 h-9 animate-spin text-cyan-400 mx-auto" />
-              <div className="space-y-1">
-                <h3 className="text-base font-extrabold text-slate-50">{loadingStage}</h3>
-                <p className="text-xs text-slate-400 font-medium">
-                  Retrieving CS rules database and performing static code analysis...
-                </p>
-              </div>
-            </div>
-          )}
+            {/* Loading Indicator */}
+            {loading && (
+              <li className="state" aria-live="polite">
+                <div>
+                  <h3 className="state__h">{loadingStage}</h3>
+                  <p>Retrieving CS rules database and performing static code analysis...</p>
+                </div>
+                <span className="run" style={{ background: "var(--ink)", color: "var(--paper)" }} aria-hidden="true">
+                  <span className="spin" style={{ display: "inline-block" }} />
+                </span>
+              </li>
+            )}
 
-          {/* Empty State */}
-          {!loading && filteredResults.length === 0 && (
-            <div className="aurora-glass rounded-3xl p-16 text-center text-slate-400 space-y-2 border border-slate-800">
-              <FileCode className="w-12 h-12 mx-auto text-slate-500" />
-              <p className="font-extrabold text-slate-200 text-base">No Audited Files Match Selected Criteria</p>
-              <p className="text-xs text-slate-400 font-medium">Try running a scan or selecting &quot;All&quot; filter tab.</p>
-            </div>
-          )}
+            {/* Empty State */}
+            {!loading && filteredResults.length === 0 && (
+              <li className="state">
+                <div>
+                  <h3 className="state__h">No audited files match</h3>
+                  <p>Run a scan, clear the search, or switch the filter to All.</p>
+                </div>
+                <button
+                  className="pill"
+                  onClick={() => {
+                    setDomainFilter("ALL");
+                    setSearchQuery("");
+                  }}
+                >
+                  Show all files
+                </button>
+              </li>
+            )}
 
-          {/* Accordion Audit Breakdown Cards List */}
-          {!loading &&
-            filteredResults.map((file) => (
-              <AuditCard
-                key={file.filename}
-                file={file}
-                isExpanded={expandedFiles[file.filename] || false}
-                onToggleDiff={() => toggleDiff(file.filename)}
-                copiedFile={copiedFile}
-                onCopySnippet={copySnippet}
-              />
-            ))}
+            {/* Accordion Audit Breakdown List */}
+            {!loading &&
+              filteredResults.map((file) => (
+                <AuditCard
+                  key={file.filename}
+                  file={file}
+                  isExpanded={expandedFiles[file.filename] || false}
+                  onToggleDiff={() => toggleDiff(file.filename)}
+                  copiedFile={copiedFile}
+                  onCopySnippet={copySnippet}
+                />
+              ))}
+          </ul>
         </section>
-
       </main>
 
-      {/* Robust Enterprise Footer */}
-      <Footer />
+      {/* Footer */}
+      <Footer onOpenSetup={() => setShowSetupGuide(true)} />
 
-    </div>
+      {/* Local Setup drawer */}
+      <LocalSetupModal open={showSetupGuide} onClose={() => setShowSetupGuide(false)} />
+
+      <FloatingAudit />
+    </>
   );
 }
