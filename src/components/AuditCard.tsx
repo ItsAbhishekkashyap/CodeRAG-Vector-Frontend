@@ -61,7 +61,8 @@ export const AuditCard: React.FC<AuditCardProps> = ({
 }) => {
   const isPassed = file.overall_score >= 80;
   const architecture = file.violations.filter(v => v.includes("[OOPS]") || v.includes("[DBMS]"));
-  const security = file.violations.filter(v => v.includes("[Security") || v.includes("[OS]"));
+  // backend tags concurrency findings as "[OS/Concurrency]", so match the "[OS" prefix
+  const security = file.violations.filter(v => v.includes("[Security") || v.includes("[OS"));
   const clean = file.violations.length === 0 || file.violations[0] === "No critical violations flagged.";
 
   // score bars draw in the first time the row scrolls into view
